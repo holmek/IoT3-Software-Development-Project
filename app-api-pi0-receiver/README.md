@@ -1,4 +1,4 @@
-## Opsætning af app-pi4-transmitter
+## Opsætning af app-api-pi0-receiver
 
 ### Krav
 
@@ -10,7 +10,7 @@
    ```bash
    git clone https://github.com/holmek/IoT3-Software-Development-Project.git
    cd IoT3-Software-Development-Project
-   cd app-pi4-transmitter
+   cd app-api-pi0-receiver
    cd src
    ```
 
@@ -27,5 +27,5 @@
 
 4. Kør applikationen:
    ```bash
-   python main.py
+   python app.py
    ```
