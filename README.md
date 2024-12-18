@@ -31,7 +31,5 @@
    git clone https://github.com/holmek/IoT3-Software-Development-Project.git
    cd IoT3-Software-Development-Project
    cd webapp-pi0
-   python3 -m venv venv
-   source venv/bin/activate
-   pip install -r requirements.txt
-   python main.py
+   npm install
+   npm run dev
