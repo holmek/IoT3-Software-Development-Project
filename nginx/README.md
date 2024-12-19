@@ -1,7 +1,5 @@
 # Nginx SSL Konfiguration
 
-Dette dokument beskriver, hvordan du opretter et selvsigneret SSL-certifikat og konfigurerer Nginx til at bruge det.
-
 ## Generering af SSL-certifikat
 
 1. Opret en mappe til at gemme SSL-certifikaterne, hvis den ikke allerede findes:
@@ -16,23 +14,12 @@ Dette dokument beskriver, hvordan du opretter et selvsigneret SSL-certifikat og 
     sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/nginx/ssl/nginx.key -out /etc/nginx/ssl/nginx.crt
     ```
 
-    - `-x509`: Generer et selvsigneret certifikat.
-    - `-nodes`: Opret certifikatet uden en adgangskode for nøglen.
-    - `-days 365`: Gør certifikatet gyldigt i 365 dage.
-    - `-newkey rsa:2048`: Generer en ny RSA-nøgle på 2048 bits.
-    - `-keyout`: Angiv filen, hvor den private nøgle gemmes.
-    - `-out`: Angiv filen, hvor certifikatet gemmes.
-
-3. Følg instruktionerne på skærmen for at indtaste oplysninger som land, organisation og servernavn.
-
 ## Nginx Konfiguration
 
-For at konfigurere Nginx til at bruge SSL-certifikatet, skal du opdatere din Nginx-konfiguration som følger:
-
-1. Åbn din Nginx konfigurationsfil:
+1. Åbn din Nginx-konfigurationsfil, som findes i `nginx/src/nginx_config`:
 
     ```bash
-    sudo nano /etc/nginx/sites-available/default
+    sudo nano /nginx/src/nginx_config
     ```
 
 2. Tilføj følgende SSL-konfiguration:
@@ -70,9 +57,6 @@ For at konfigurere Nginx til at bruge SSL-certifikatet, skal du opdatere din Ngi
         }
     }
     ```
-
-    - Sørg for, at stien til dit SSL-certifikat og din private nøgle stemmer overens med de filer, du har genereret.
-    - Angiv den ønskede rodmappe for din webapplikation som `/var/www/webapp-pi0/dist`.
 
 ## Genstart Nginx
 
