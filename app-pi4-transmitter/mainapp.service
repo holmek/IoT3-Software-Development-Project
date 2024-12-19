@@ -1,5 +1,5 @@
 [Unit]
-Description=Start main.py on boot
+Description=Start main.py
 After=network.target
 
 [Service]
