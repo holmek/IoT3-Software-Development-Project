@@ -40,7 +40,7 @@
         gzip_min_length 1000;
 
         location / {
-            root /var/www/webapp-pi0/dist;
+            root /var/www/webapp-pi0/dist;  # Sørg for, at din webapp ligger her
             index index.html index.htm;
         }
 
