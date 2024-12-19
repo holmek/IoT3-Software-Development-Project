@@ -15,6 +15,6 @@ rfm9x.tx_power = 23
 def send_lora_message(message):
     if len(message) <= 252:
         rfm9x.send(bytes(message + "\r\n", "utf-8"))
-        print(f"Sendte besked: {message}")
+        print(f"{message}")
     else:
-        print("Beskeden er for stor til at sende.")
+        print("Beskeden for stor.")
