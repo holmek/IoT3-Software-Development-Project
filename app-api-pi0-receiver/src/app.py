@@ -6,6 +6,10 @@ import digitalio
 import board
 import busio
 import adafruit_rfm9x
+import os
+import time
+from azure.storage.blob import BlobServiceClient
+from threading import Timer
 
 app = Flask(__name__)
 
@@ -18,11 +22,13 @@ rfm9x.tx_power = 23
 
 latest_message = None
 
+BLOB_CONNECTION_STRING = "xxx"
+BLOB_CONTAINER_NAME = "backup-container"
+BLOB_FILE_NAME = "data.db"
 
 def init_db():
     conn = sqlite3.connect("data.db")
     cursor = conn.cursor()
-
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS device (
             id TEXT PRIMARY KEY,
@@ -49,14 +55,11 @@ def init_db():
     conn.commit()
     conn.close()
 
-
 init_db()
-
 
 def insert_data(data):
     conn = sqlite3.connect("data.db")
     cursor = conn.cursor()
-
     device_data = (
         data.get("id"),
         data.get("ts"),
@@ -89,7 +92,6 @@ def insert_data(data):
     conn.commit()
     conn.close()
 
-
 def lora_listener():
     global latest_message
     while True:
@@ -97,22 +99,31 @@ def lora_listener():
         if packet is not None:
             try:
                 packet_text = str(packet, "ascii").strip()
-                print(f"Received (ASCII): {packet_text}")
+                print(f"Modtaget (ASCII): {packet_text}")
                 latest_message = packet_text
                 message_data = json.loads(packet_text)
                 insert_data(message_data)
             except json.JSONDecodeError:
-                print("Fejl: Modtog ugyldig JSON.")
+                print("Ugyldig JSON.")
             except Exception as e:
                 print(f"Fejl: {e}")
 
+def backup_db_to_azure():
+    blob_service_client = BlobServiceClient.from_connection_string(BLOB_CONNECTION_STRING)
+    blob_client = blob_service_client.get_blob_client(container=BLOB_CONTAINER_NAME, blob=BLOB_FILE_NAME)
+
+    with open("/home/eeeg/Desktop/app-api-pi0-receiver/data.db", "rb") as data_file:
+        blob_client.upload_blob(data_file, overwrite=True)
+
+def schedule_backup():
+    backup_db_to_azure()
+    Timer(604800, schedule_backup).start()
 
 @app.route("/")
 def home():
     conn = sqlite3.connect("data.db")
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
-
     cursor.execute("""
         SELECT id, timestamp, wifi_strength, ip_address, temperature
         FROM device
@@ -140,7 +151,6 @@ def home():
     for row in health_data:
         systolic = row["systolic"]
         diastolic = row["diastolic"]
-
         if systolic is not None and diastolic is not None:
             if systolic < 120 and diastolic < 80:
                 categories["Normal"] += 1
@@ -187,81 +197,59 @@ def home():
         "categories": categories
     })
 
-
 @app.route("/device/<id>")
 def device_detail(id):
     conn = sqlite3.connect("data.db")
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
-
     cursor.execute("SELECT * FROM device WHERE id = ?", (id,))
     device = cursor.fetchone()
-
     cursor.execute("SELECT * FROM health WHERE device_id = ?", (id,))
     health_records = [dict(row) for row in cursor.fetchall()]
-
     conn.close()
-
     return jsonify({
         "device": dict(device),
         "health_records": health_records
     })
-
 
 @app.route("/person/<cpr>")
 def person_detail(cpr):
     conn = sqlite3.connect("data.db")
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
-
     cursor.execute("SELECT * FROM health WHERE cpr = ?", (cpr,))
     person_data = cursor.fetchone()
-
     conn.close()
-
     return jsonify({
         "person_data": dict(person_data)
     })
-
 
 @app.route("/devices")
 def all_devices():
     conn = sqlite3.connect("data.db")
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT * FROM device
-    """)
+    cursor.execute("SELECT * FROM device")
     devices = [dict(row) for row in cursor.fetchall()]
-
     conn.close()
-
     return jsonify({"devices": devices})
-
 
 @app.route("/health")
 def all_health():
     conn = sqlite3.connect("data.db")
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT * FROM health
-    """)
+    cursor.execute("SELECT * FROM health")
     health_data = [dict(row) for row in cursor.fetchall()]
-
     conn.close()
-
     return jsonify({"health_data": health_data})
-
 
 @app.route("/latest_message")
 def latest_message_route():
     return jsonify({"message": latest_message or "Venter på første besked..."})
 
-
 if __name__ == "__main__":
+    schedule_backup()
     lora_listener_thread = Thread(target=lora_listener, daemon=True)
     lora_listener_thread.start()
     app.run(host="0.0.0.0", port=5000)
