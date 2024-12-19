@@ -40,7 +40,7 @@
         gzip_min_length 1000;
 
         location / {
-            root /var/www/webapp-pi0/dist;
+            root /var/www/webapp-pi0/dist;  # Sørg for, at din webapp er i denne mappe
             index index.html index.htm;
         }
 
@@ -57,6 +57,8 @@
         }
     }
     ```
+
+3. **Bemærk**: Sørg for, at din webapp er placeret i `/var/www/webapp-pi0/dist`, da dette er den angivne `root`-sti.
 
 ## Genstart Nginx
 
