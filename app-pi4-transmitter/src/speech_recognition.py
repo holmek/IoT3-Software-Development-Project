@@ -3,7 +3,6 @@ from gpiozero import LED
 
 red_led = LED(19)
 
-
 def recognize_from_microphone():
     speech_config = speechsdk.SpeechConfig(
         subscription="BLQyfL3cznQPolyd8jPmJLEkFaazRjqbPrgLHdOUBAg6iyzToVFLJQQJ99ALACi5YpzXJ3w3AAAYACOGJr9p",
@@ -14,7 +13,6 @@ def recognize_from_microphone():
     recognizer = speechsdk.SpeechRecognizer(
         speech_config=speech_config, audio_config=audio_config
     )
-    print("Tal ind i din mikrofon...")
 
     red_led.on()
     result = recognizer.recognize_once_async().get()
@@ -22,7 +20,6 @@ def recognize_from_microphone():
 
     if result.reason == speechsdk.ResultReason.RecognizedSpeech:
         recognized_speech = result.text
-        print(f"Genkendt tale: {recognized_speech}")
         return recognized_speech
 
     return None
